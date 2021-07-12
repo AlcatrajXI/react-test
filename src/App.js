@@ -1,9 +1,9 @@
 import './App.css';
-import { GitApi, Columns } from './App.data.js';
 import React from 'react';
-import { Card, Table, Input } from 'antd';
-
-const { Search } = Input;
+import { Card } from 'antd';
+import { GitApi } from './App.data.js';
+import SearchComp from './components/SearchComp';
+import TableComp from './components/TableComp';
 
 class MainComp extends React.Component {
 
@@ -11,45 +11,54 @@ class MainComp extends React.Component {
     super(props);
 
     this.state = {
-      tableData: []
+      tableData: {
+        items: [],
+        total_count: 0
+      },
+      page: 1,
+      pageSize: 9,
+      query: ''
     };
 
-    this.searchSubmit = this.searchSubmit.bind(this);
+    this.handleSearch = this.handleSearch.bind(this);
+    this.getUsers = this.getUsers.bind(this);
+    this.handleTableChange = this.handleTableChange.bind(this);
   }
 
-
-  searchSubmit(query) {
-
+  getUsers(query, page, pageSize = this.state.pageSize) {
+    this.setState({ query, page, pageSize });
     if (query.trim()) {
-      fetch(`${GitApi.getUsers}?q=${query}`)
+      fetch(`${GitApi.getUsers}?per_page=${pageSize}&page=${page}&q=${query}`)
         .then((response) => response.json())
         .then((res) => {
           if (res.items) {
-            this.setState({ tableData: res.items });
+            this.setState({ tableData: res });
           } else {
-            alert(res.message);
+            this.setState({ tableData: undefined });
           }
         })
         .catch((error) => {
-          alert(error);
+          this.setState({ tableData: undefined });
         });
     } else {
-      this.setState({ tableData: [] });
+      this.setState({ tableData: undefined });
     }
+  }
+
+  handleSearch(data) {
+    this.setState({ tableData: data });
+  }
+
+  handleTableChange(data) {
+    this.getUsers(this.state.query, data.current, data.pageSize)
   }
 
   render() {
     return (
       <div className="container">
         <Card className="card">
-          <Search
-            placeholder="Search users"
-            allowClear
-            enterButton="Search"
-            size="large"
-            onSearch={this.searchSubmit}
-          />
-          <Table columns={Columns} dataSource={this.state.tableData} rowKey={"id"} pagination={{ defaultPageSize: 9 }} />
+          <SearchComp onSearch={this.getUsers} />
+          <TableComp onTableChange={this.handleTableChange} pageSize={this.state.pageSize} tableData={this.state.tableData} />
         </Card>
       </div>
     )
