@@ -1,24 +1,13 @@
+import React from 'react';
+import { Table } from 'antd';
 import { Columns } from '../App.data.js';
-import React, { Component } from 'react';
-import { Table, Input } from 'antd';
 
-export default class TableComp extends Component {
+const TableComp = React.memo(props => {
+    let pagination = { pageSize: props.pageSize, total: props.tableData.total_count};
 
-    constructor(props) {
-        super(props);
+    return (
+        <Table columns={Columns} onChange={props.onTableChange} dataSource={props.tableData?.items ?? []} rowKey={"id"} pagination={pagination} />
+    );
+});
 
-        this.state = {
-            tableData: []
-        };
-    }
-    handleTableChange(e) {
-        this.props.onTableChange(e);
-    }
-
-    render() {
-        let pagination = { pageSize: this.props.pageSize, total: this.props.tableData?.total_count ?? 0};
-        return (
-            <Table columns={Columns} onChange={this.props.onTableChange} dataSource={this.props.tableData?.items ?? []} rowKey={"id"} pagination={pagination} />
-        )
-    }
-}
+export default TableComp;

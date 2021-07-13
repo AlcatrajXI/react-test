@@ -1,7 +1,6 @@
 import './App.css';
 import React from 'react';
 import { Card } from 'antd';
-import { GitApi } from './App.data.js';
 import SearchComp from './components/SearchComp';
 import TableComp from './components/TableComp';
 
@@ -21,43 +20,22 @@ class MainComp extends React.Component {
     };
 
     this.handleSearch = this.handleSearch.bind(this);
-    this.getUsers = this.getUsers.bind(this);
     this.handleTableChange = this.handleTableChange.bind(this);
   }
 
-  getUsers(query, page, pageSize = this.state.pageSize) {
-    this.setState({ query, page, pageSize });
-    if (query.trim()) {
-      fetch(`${GitApi.getUsers}?per_page=${pageSize}&page=${page}&q=${query}`)
-        .then((response) => response.json())
-        .then((res) => {
-          if (res.items) {
-            this.setState({ tableData: res });
-          } else {
-            this.setState({ tableData: undefined });
-          }
-        })
-        .catch((error) => {
-          this.setState({ tableData: undefined });
-        });
-    } else {
-      this.setState({ tableData: undefined });
-    }
-  }
-
   handleSearch(data) {
-    this.setState({ tableData: data });
+    this.setState({ tableData: data.tableData, page: data.page, pageSize: data.pageSize, query: data.query });
   }
 
   handleTableChange(data) {
-    this.getUsers(this.state.query, data.current, data.pageSize)
+    this.setState({ page: data.current, pageSize: data.pageSize });
   }
 
   render() {
     return (
       <div className="container">
         <Card className="card">
-          <SearchComp onSearch={this.getUsers} />
+          <SearchComp onSearch={this.handleSearch} page={this.state.page} pageSize={this.state.pageSize} />
           <TableComp onTableChange={this.handleTableChange} pageSize={this.state.pageSize} tableData={this.state.tableData} />
         </Card>
       </div>

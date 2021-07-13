@@ -1,30 +1,54 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from 'antd';
+import { GitApi } from '../App.data.js';
 
 const { Search } = Input;
 
-export default class SearchComp extends Component {
+const SearchInput = React.memo(props => {
+    const { onSearch, pageSize, page } = props;
+    const [searchQuery, setSearchQuery] = useState('');
 
-    constructor(props) {
-        super(props);
+    useEffect(() => {
+        let processResult = (res = undefined) => {
+            let data = {
+                page,
+                pageSize,
+                query: searchQuery,
+                tableData: {
+                    items: [],
+                    total_count: 0
+                }
+            }
+            if(res?.items) {
+                data.tableData.items = res.items;
+                data.tableData.total_count = res.total_count;
+            }
+            return data;
+        };
 
-        this.searchSubmit = this.searchSubmit.bind(this);
-    }
+        if (searchQuery.trim()) {
+            fetch(`${GitApi.getUsers}?per_page=${pageSize}&page=${page}&q=${searchQuery}`)
+                .then((response) => response.json())
+                .then((res) => {
+                    onSearch(processResult(res));
+                })
+                .catch((error) => {
+                    onSearch(processResult());
+                });
+        } else {
+            onSearch(processResult());
+        }
+    }, [searchQuery, onSearch, page, pageSize]);
 
+    return (
+        <Search
+            placeholder="Search users"
+            allowClear
+            enterButton="Search"
+            size="large"
+            onSearch={query => setSearchQuery(query)}
+        />
+    );
+});
 
-    searchSubmit(query) {
-        this.props.onSearch(query, 1);
-    }
-
-    render() {
-        return (
-            <Search
-                placeholder="Search users"
-                allowClear
-                enterButton="Search"
-                size="large"
-                onSearch={this.searchSubmit}
-            />
-        )
-    }
-}
+export default SearchInput;
